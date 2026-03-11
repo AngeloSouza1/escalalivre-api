@@ -1,0 +1,139 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  WORKER
+  BUSINESS
+  ADMIN
+}
+
+enum JobStatus {
+  OPEN
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum ApplicationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  WITHDRAWN
+}
+
+enum ReviewTargetType {
+  WORKER
+  BUSINESS
+}
+
+model User {
+  id              String        @id @default(cuid())
+  email           String        @unique
+  passwordHash    String
+  role            UserRole
+  name            String
+  phone           String?
+  city            String
+  isActive        Boolean       @default(true)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  workerProfile   WorkerProfile?
+  businessProfile BusinessProfile?
+  jobs            Job[]         @relation("BusinessJobs")
+  applications    Application[]
+  reviewsGiven    Review[]      @relation("ReviewsGiven")
+  reviewsReceived Review[]      @relation("ReviewsReceived")
+}
+
+model WorkerProfile {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  headline       String?
+  bio            String?
+  functions      String[]
+  availability   String?
+  averageRating  Float?
+  completedJobs  Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model BusinessProfile {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  businessName   String
+  category       String
+  document       String?
+  addressLine    String?
+  neighborhood   String?
+  averageRating  Float?
+  completedJobs  Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Job {
+  id               String        @id @default(cuid())
+  businessId       String
+  title            String
+  description      String
+  category         String
+  city             String
+  neighborhood     String?
+  addressLine      String?
+  paymentAmount    Decimal       @db.Decimal(10, 2)
+  currency         String        @default("BRL")
+  startAt          DateTime
+  endAt            DateTime
+  slots            Int
+  status           JobStatus     @default(OPEN)
+  notes            String?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  business         User          @relation("BusinessJobs", fields: [businessId], references: [id], onDelete: Cascade)
+  applications     Application[]
+  reviews          Review[]
+
+  @@index([city, category, status, startAt])
+}
+
+model Application {
+  id          String            @id @default(cuid())
+  jobId        String
+  workerId     String
+  status       ApplicationStatus @default(PENDING)
+  message      String?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  job          Job               @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  worker       User              @relation(fields: [workerId], references: [id], onDelete: Cascade)
+
+  @@unique([jobId, workerId])
+  @@index([workerId, status])
+}
+
+model Review {
+  id              String           @id @default(cuid())
+  jobId            String
+  reviewerId       String
+  revieweeId       String
+  targetType       ReviewTargetType
+  rating           Int
+  comment          String?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  job              Job              @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  reviewer         User             @relation("ReviewsGiven", fields: [reviewerId], references: [id], onDelete: Cascade)
+  reviewee         User             @relation("ReviewsReceived", fields: [revieweeId], references: [id], onDelete: Cascade)
+
+  @@unique([jobId, reviewerId, revieweeId])
+  @@index([revieweeId, targetType])
+}

@@ -1,0 +1,439 @@
+{
+  "info": {
+    "_postman_id": "8a4aee1d-6d8b-4ec7-9c7b-4b7e7f6d3b31",
+    "name": "EscalaLivre API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Colecao de requests para validar o MVP do backend EscalaLivre."
+  },
+  "item": [
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/health",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "health"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login BUSINESS",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "pm.collectionVariables.set('businessToken', data.token);",
+                  "pm.test('business token definido', function () {",
+                  "  pm.expect(data.token).to.be.a('string');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{businessEmail}}\",\n  \"password\": \"{{defaultPassword}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Login WORKER",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "pm.collectionVariables.set('workerToken', data.token);",
+                  "pm.test('worker token definido', function () {",
+                  "  pm.expect(data.token).to.be.a('string');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{workerEmail}}\",\n  \"password\": \"{{defaultPassword}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Auth Me",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{businessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Jobs",
+      "item": [
+        {
+          "name": "List Open Jobs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/jobs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Seed Job",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/jobs/{{openJobId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs",
+                "{{openJobId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "List Business Jobs",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{businessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/jobs/mine",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs",
+                "mine"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Job",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "if (data.job && data.job.id) {",
+                  "  pm.collectionVariables.set('createdJobId', data.job.id);",
+                  "}",
+                  "pm.test('job criada', function () {",
+                  "  pm.expect(data.job.id).to.be.a('string');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{businessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Atendente para sabado\",\n  \"description\": \"Atendimento ao cliente e apoio no caixa\",\n  \"category\": \"atendente\",\n  \"city\": \"Sao Jose dos Campos\",\n  \"neighborhood\": \"Centro\",\n  \"paymentAmount\": 140,\n  \"startAt\": \"2026-03-14T14:00:00.000Z\",\n  \"endAt\": \"2026-03-14T20:00:00.000Z\",\n  \"slots\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/jobs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Applications",
+      "item": [
+        {
+          "name": "Worker Applications",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{workerToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/applications/mine",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "applications",
+                "mine"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Apply To Seed Job",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "if (data.application && data.application.id) {",
+                  "  pm.collectionVariables.set('latestApplicationId', data.application.id);",
+                  "}",
+                  "pm.test('application criada ou conflito tratado manualmente', function () {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([201, 409]);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{workerToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Tenho experiencia em bares e eventos\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/jobs/{{openJobId}}/applications",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs",
+                "{{openJobId}}",
+                "applications"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Business Job Applications",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{businessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/jobs/{{openJobId}}/applications",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs",
+                "{{openJobId}}",
+                "applications"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Approve Seed Application",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{businessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"APPROVED\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/applications/{{pendingApplicationId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "applications",
+                "{{pendingApplicationId}}",
+                "status"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reviews",
+      "item": [
+        {
+          "name": "Reviews Me",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{workerToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reviews/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reviews",
+                "me"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "businessEmail",
+      "value": "bar.centro@escalalivre.dev"
+    },
+    {
+      "key": "workerEmail",
+      "value": "maria@escalalivre.dev"
+    },
+    {
+      "key": "defaultPassword",
+      "value": "123456"
+    },
+    {
+      "key": "openJobId",
+      "value": "cmmmjrr0f000gqx321vw2e0sx"
+    },
+    {
+      "key": "pendingApplicationId",
+      "value": "cmmmjrr0n000oqx32xw3qve74"
+    },
+    {
+      "key": "businessToken",
+      "value": ""
+    },
+    {
+      "key": "workerToken",
+      "value": ""
+    },
+    {
+      "key": "createdJobId",
+      "value": ""
+    },
+    {
+      "key": "latestApplicationId",
+      "value": ""
+    }
+  ]
+}

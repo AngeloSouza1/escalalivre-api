@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: escalalivre-api
+    runtime: node
+    plan: starter
+    rootDir: .
+    buildCommand: npm install && npm run build
+    startCommand: npx prisma migrate deploy && node src/server.js
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: escalalivre-postgres
+          property: connectionString
+
+databases:
+  - name: escalalivre-postgres
+    plan: starter
