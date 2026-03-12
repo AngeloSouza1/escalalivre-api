@@ -53,7 +53,25 @@
             <button id="logout-button" class="ghost-button hidden" type="button">Sair</button>
           </div>
 
+          <div class="mode-switch">
+            <button id="auth-mode-login" class="mode-button active" type="button">Login</button>
+            <button id="auth-mode-register" class="mode-button" type="button">Cadastro</button>
+          </div>
+
           <form id="login-form" class="stack">
+            <label id="role-field" class="field hidden">
+              <span>Perfil</span>
+              <select id="register-role" name="role">
+                <option value="WORKER">Profissional</option>
+                <option value="BUSINESS">Comercio</option>
+              </select>
+            </label>
+
+            <label id="name-field" class="field hidden">
+              <span>Nome</span>
+              <input id="register-name" name="name" type="text" />
+            </label>
+
             <label class="field">
               <span>E-mail</span>
               <input id="email" name="email" type="email" required />
@@ -64,12 +82,32 @@
               <input id="password" name="password" type="password" required />
             </label>
 
+            <label id="city-field" class="field hidden">
+              <span>Cidade</span>
+              <input id="register-city" name="city" type="text" />
+            </label>
+
+            <label id="business-name-field" class="field hidden">
+              <span>Nome do comercio</span>
+              <input id="register-business-name" name="businessName" type="text" />
+            </label>
+
+            <label id="business-category-field" class="field hidden">
+              <span>Categoria</span>
+              <input id="register-category" name="category" type="text" placeholder="bar, padaria, restaurante" />
+            </label>
+
+            <label id="worker-functions-field" class="field hidden">
+              <span>Funcoes</span>
+              <input id="register-functions" name="functions" type="text" placeholder="garcom, atendente" />
+            </label>
+
             <div class="seed-buttons">
               <button class="seed-button" type="button" data-seed="business">Usar seed BUSINESS</button>
               <button class="seed-button" type="button" data-seed="worker">Usar seed WORKER</button>
             </div>
 
-            <button class="primary-button" type="submit">Entrar</button>
+            <button id="auth-submit" class="primary-button" type="submit">Entrar</button>
           </form>
 
           <div id="auth-state" class="auth-state hidden"></div>
@@ -83,6 +121,18 @@
               <h2>Vagas abertas</h2>
             </div>
             <button id="refresh-jobs" class="ghost-button" type="button">Atualizar</button>
+          </div>
+
+          <div class="filters">
+            <label class="field">
+              <span>Cidade</span>
+              <input id="filter-city" type="text" placeholder="Ex.: Sao Jose dos Campos" />
+            </label>
+            <label class="field">
+              <span>Categoria</span>
+              <input id="filter-category" type="text" placeholder="garcom, caixa..." />
+            </label>
+            <button id="apply-filters" class="ghost-button" type="button">Filtrar</button>
           </div>
 
           <div id="jobs-list" class="jobs-list">
@@ -109,6 +159,56 @@
               <p class="eyebrow">Meu painel</p>
               <h2 id="dashboard-title">Aguardando login</h2>
             </div>
+          </div>
+
+          <div id="job-create-panel" class="dashboard-panel hidden">
+            <div class="section-heading compact">
+              <div>
+                <span class="meta-label">Nova vaga</span>
+                <strong>Criar vaga rapida</strong>
+              </div>
+            </div>
+            <form id="job-form" class="stack">
+              <label class="field">
+                <span>Titulo</span>
+                <input id="job-title" type="text" required />
+              </label>
+              <label class="field">
+                <span>Descricao</span>
+                <textarea id="job-description" rows="4" required></textarea>
+              </label>
+              <div class="detail-grid">
+                <label class="field">
+                  <span>Categoria</span>
+                  <input id="job-category" type="text" required />
+                </label>
+                <label class="field">
+                  <span>Cidade</span>
+                  <input id="job-city" type="text" required />
+                </label>
+                <label class="field">
+                  <span>Bairro</span>
+                  <input id="job-neighborhood" type="text" />
+                </label>
+                <label class="field">
+                  <span>Valor</span>
+                  <input id="job-payment" type="number" min="1" step="0.01" required />
+                </label>
+                <label class="field">
+                  <span>Inicio</span>
+                  <input id="job-start-at" type="datetime-local" required />
+                </label>
+                <label class="field">
+                  <span>Fim</span>
+                  <input id="job-end-at" type="datetime-local" required />
+                </label>
+                <label class="field">
+                  <span>Vagas</span>
+                  <input id="job-slots" type="number" min="1" step="1" value="1" required />
+                </label>
+              </div>
+              <button class="primary-button" type="submit">Publicar vaga</button>
+            </form>
           </div>
 
           <div id="dashboard-content" class="dashboard-content">

@@ -2,10 +2,19 @@ const seedAccounts = {
   business: {
     email: 'bar.centro@escalalivre.dev',
     password: '123456',
+    role: 'BUSINESS',
+    name: 'Carlos do Bar',
+    city: 'Sao Jose dos Campos',
+    businessName: 'Bar do Centro',
+    category: 'bar',
   },
   worker: {
     email: 'maria@escalalivre.dev',
     password: '123456',
+    role: 'WORKER',
+    name: 'Maria Oliveira',
+    city: 'Sao Jose dos Campos',
+    functions: 'garcom, atendente',
   },
 }
 
@@ -15,6 +24,11 @@ const state = {
   jobs: [],
   selectedJob: null,
   dashboardApplications: [],
+  authMode: 'login',
+  filters: {
+    city: '',
+    category: '',
+  },
 }
 
 const elements = {
@@ -22,25 +36,52 @@ const elements = {
   apiStatusDetail: document.querySelector('#api-status-detail'),
   apiBaseUrl: document.querySelector('#api-base-url'),
   loginForm: document.querySelector('#login-form'),
+  authModeLogin: document.querySelector('#auth-mode-login'),
+  authModeRegister: document.querySelector('#auth-mode-register'),
+  authSubmit: document.querySelector('#auth-submit'),
   email: document.querySelector('#email'),
   password: document.querySelector('#password'),
+  registerRole: document.querySelector('#register-role'),
+  registerName: document.querySelector('#register-name'),
+  registerCity: document.querySelector('#register-city'),
+  registerBusinessName: document.querySelector('#register-business-name'),
+  registerCategory: document.querySelector('#register-category'),
+  registerFunctions: document.querySelector('#register-functions'),
+  roleField: document.querySelector('#role-field'),
+  nameField: document.querySelector('#name-field'),
+  cityField: document.querySelector('#city-field'),
+  businessNameField: document.querySelector('#business-name-field'),
+  businessCategoryField: document.querySelector('#business-category-field'),
+  workerFunctionsField: document.querySelector('#worker-functions-field'),
   authState: document.querySelector('#auth-state'),
   authMessage: document.querySelector('#auth-message'),
   logoutButton: document.querySelector('#logout-button'),
   refreshJobs: document.querySelector('#refresh-jobs'),
+  filterCity: document.querySelector('#filter-city'),
+  filterCategory: document.querySelector('#filter-category'),
+  applyFilters: document.querySelector('#apply-filters'),
   jobsList: document.querySelector('#jobs-list'),
   jobDetails: document.querySelector('#job-details'),
   detailsTitle: document.querySelector('#details-title'),
   dashboardTitle: document.querySelector('#dashboard-title'),
   dashboardContent: document.querySelector('#dashboard-content'),
+  jobCreatePanel: document.querySelector('#job-create-panel'),
+  jobForm: document.querySelector('#job-form'),
+  jobTitle: document.querySelector('#job-title'),
+  jobDescription: document.querySelector('#job-description'),
+  jobCategory: document.querySelector('#job-category'),
+  jobCity: document.querySelector('#job-city'),
+  jobNeighborhood: document.querySelector('#job-neighborhood'),
+  jobPayment: document.querySelector('#job-payment'),
+  jobStartAt: document.querySelector('#job-start-at'),
+  jobEndAt: document.querySelector('#job-end-at'),
+  jobSlots: document.querySelector('#job-slots'),
   jobTemplate: document.querySelector('#job-item-template'),
 }
 
 function loadStoredUser() {
   const raw = localStorage.getItem('escalaLivreUser')
-  if (!raw) {
-    return null
-  }
+  if (!raw) return null
 
   try {
     return JSON.parse(raw)
@@ -50,29 +91,18 @@ function loadStoredUser() {
 }
 
 function saveSession() {
-  if (state.token) {
-    localStorage.setItem('escalaLivreToken', state.token)
-  } else {
-    localStorage.removeItem('escalaLivreToken')
-  }
+  if (state.token) localStorage.setItem('escalaLivreToken', state.token)
+  else localStorage.removeItem('escalaLivreToken')
 
-  if (state.user) {
-    localStorage.setItem('escalaLivreUser', JSON.stringify(state.user))
-  } else {
-    localStorage.removeItem('escalaLivreUser')
-  }
+  if (state.user) localStorage.setItem('escalaLivreUser', JSON.stringify(state.user))
+  else localStorage.removeItem('escalaLivreUser')
 }
 
 async function apiRequest(path, options = {}) {
   const headers = new Headers(options.headers || {})
 
-  if (state.token) {
-    headers.set('Authorization', `Bearer ${state.token}`)
-  }
-
-  if (options.body && !headers.has('Content-Type')) {
-    headers.set('Content-Type', 'application/json')
-  }
+  if (state.token) headers.set('Authorization', `Bearer ${state.token}`)
+  if (options.body && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json')
 
   const response = await fetch(path, {
     ...options,
@@ -104,17 +134,15 @@ function clearFeedback() {
 }
 
 function currency(value) {
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(value || 0)
+  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0)
 }
 
 function dateLabel(value) {
-  return new Intl.DateTimeFormat('pt-BR', {
-    dateStyle: 'short',
-    timeStyle: 'short',
-  }).format(new Date(value))
+  return new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(value))
+}
+
+function toIsoLocal(value) {
+  return new Date(value).toISOString()
 }
 
 function setApiStatus(text, detail, isOk = true) {
@@ -124,10 +152,31 @@ function setApiStatus(text, detail, isOk = true) {
   elements.apiBaseUrl.textContent = window.location.origin
 }
 
+function setAuthMode(mode) {
+  state.authMode = mode
+  const isRegister = mode === 'register'
+  elements.authModeLogin.classList.toggle('active', !isRegister)
+  elements.authModeRegister.classList.toggle('active', isRegister)
+  elements.authSubmit.textContent = isRegister ? 'Criar conta' : 'Entrar'
+  elements.roleField.classList.toggle('hidden', !isRegister)
+  elements.nameField.classList.toggle('hidden', !isRegister)
+  elements.cityField.classList.toggle('hidden', !isRegister)
+  updateRegisterRoleFields()
+}
+
+function updateRegisterRoleFields() {
+  const isRegister = state.authMode === 'register'
+  const isBusiness = elements.registerRole.value === 'BUSINESS'
+  elements.businessNameField.classList.toggle('hidden', !isRegister || !isBusiness)
+  elements.businessCategoryField.classList.toggle('hidden', !isRegister || !isBusiness)
+  elements.workerFunctionsField.classList.toggle('hidden', !isRegister || isBusiness)
+}
+
 function renderAuthState() {
   if (!state.user) {
     elements.authState.classList.add('hidden')
     elements.logoutButton.classList.add('hidden')
+    elements.jobCreatePanel.classList.add('hidden')
     return
   }
 
@@ -138,17 +187,27 @@ function renderAuthState() {
     <strong>${state.user.name}</strong>
     <p class="mini-copy">${state.user.role} · ${state.user.email}</p>
   `
+  elements.jobCreatePanel.classList.toggle('hidden', state.user.role !== 'BUSINESS')
+}
+
+function getFilteredJobs() {
+  return state.jobs.filter((job) => {
+    const cityMatch = !state.filters.city || job.city.toLowerCase().includes(state.filters.city.toLowerCase())
+    const categoryMatch = !state.filters.category || job.category.toLowerCase().includes(state.filters.category.toLowerCase())
+    return cityMatch && categoryMatch
+  })
 }
 
 function renderJobs() {
   elements.jobsList.innerHTML = ''
+  const jobs = getFilteredJobs()
 
-  if (!state.jobs.length) {
-    elements.jobsList.innerHTML = '<p class="empty-state">Nenhuma vaga aberta no momento.</p>'
+  if (!jobs.length) {
+    elements.jobsList.innerHTML = '<p class="empty-state">Nenhuma vaga encontrada com os filtros atuais.</p>'
     return
   }
 
-  state.jobs.forEach((job) => {
+  jobs.forEach((job) => {
     const fragment = elements.jobTemplate.content.cloneNode(true)
     fragment.querySelector('.job-title').textContent = job.title
     fragment.querySelector('.job-meta').textContent = `${job.city} · ${job.category} · ${dateLabel(job.startAt)}`
@@ -176,17 +235,17 @@ async function selectJob(jobId) {
   }
 }
 
+function workerAlreadyApplied(job) {
+  return Array.isArray(job.applications) && job.applications.some((application) => application.workerId === state.user?.id)
+}
+
 async function applyToSelectedJob() {
-  if (!state.selectedJob) {
-    return
-  }
+  if (!state.selectedJob) return
 
   try {
     await apiRequest(`/jobs/${state.selectedJob.id}/applications`, {
       method: 'POST',
-      body: {
-        message: 'Disponivel para assumir o turno.',
-      },
+      body: { message: 'Disponivel para assumir o turno.' },
     })
 
     setFeedback('Candidatura enviada com sucesso.')
@@ -201,16 +260,12 @@ async function approveApplication(applicationId) {
   try {
     await apiRequest(`/applications/${applicationId}/status`, {
       method: 'PATCH',
-      body: {
-        status: 'APPROVED',
-      },
+      body: { status: 'APPROVED' },
     })
 
     setFeedback('Candidatura aprovada com sucesso.')
     await refreshAll()
-    if (state.selectedJob) {
-      await selectJob(state.selectedJob.id)
-    }
+    if (state.selectedJob) await selectJob(state.selectedJob.id)
   } catch (error) {
     setFeedback(error.message, 'error')
   }
@@ -229,7 +284,11 @@ function renderJobDetails() {
 
   const actions = []
   if (state.user?.role === 'WORKER' && job.status === 'OPEN') {
-    actions.push('<button id="apply-job-button" class="primary-button" type="button">Candidatar-se</button>')
+    if (workerAlreadyApplied(job)) {
+      actions.push('<span class="status-pill status-approved">Candidatura enviada</span>')
+    } else {
+      actions.push('<button id="apply-job-button" class="primary-button" type="button">Candidatar-se</button>')
+    }
   }
 
   const applicationsHtml = Array.isArray(job.applications) && job.applications.length
@@ -289,15 +348,9 @@ function renderJobDetails() {
     </div>
   `
 
-  const applyButton = document.querySelector('#apply-job-button')
-  if (applyButton) {
-    applyButton.addEventListener('click', applyToSelectedJob)
-  }
-
+  document.querySelector('#apply-job-button')?.addEventListener('click', applyToSelectedJob)
   document.querySelectorAll('.approve-button').forEach((button) => {
-    button.addEventListener('click', () => {
-      approveApplication(button.dataset.applicationId)
-    })
+    button.addEventListener('click', () => approveApplication(button.dataset.applicationId))
   })
 }
 
@@ -311,7 +364,6 @@ function renderDashboard() {
   if (state.user.role === 'WORKER') {
     elements.dashboardTitle.textContent = 'Painel do profissional'
     const applications = state.dashboardApplications
-
     elements.dashboardContent.innerHTML = applications.length
       ? applications.map((application) => `
           <div class="dashboard-panel">
@@ -321,13 +373,11 @@ function renderDashboard() {
           </div>
         `).join('')
       : '<p class="empty-state">Nenhuma candidatura feita ainda.</p>'
-
     return
   }
 
   elements.dashboardTitle.textContent = 'Painel do comercio'
   const ownedJobs = state.jobs.filter((job) => job.businessId === state.user.id)
-
   elements.dashboardContent.innerHTML = ownedJobs.length
     ? ownedJobs.map((job) => `
         <div class="dashboard-panel">
@@ -384,18 +434,47 @@ async function restoreSession() {
   }
 }
 
-async function login(event) {
+async function handleAuthSubmit(event) {
   event.preventDefault()
 
   try {
     clearFeedback()
+    if (state.authMode === 'login') {
+      const response = await apiRequest('/auth/login', {
+        method: 'POST',
+        body: {
+          email: elements.email.value,
+          password: elements.password.value,
+        },
+      })
 
-    const response = await apiRequest('/auth/login', {
+      state.token = response.token
+      state.user = response.user
+      saveSession()
+      renderAuthState()
+      await refreshAll()
+      setFeedback(`Sessao iniciada como ${state.user.role}.`)
+      return
+    }
+
+    const payload = {
+      role: elements.registerRole.value,
+      name: elements.registerName.value,
+      email: elements.email.value,
+      password: elements.password.value,
+      city: elements.registerCity.value,
+    }
+
+    if (payload.role === 'BUSINESS') {
+      payload.businessName = elements.registerBusinessName.value
+      payload.category = elements.registerCategory.value
+    } else {
+      payload.functions = elements.registerFunctions.value
+    }
+
+    const response = await apiRequest('/auth/register', {
       method: 'POST',
-      body: {
-        email: elements.email.value,
-        password: elements.password.value,
-      },
+      body: payload,
     })
 
     state.token = response.token
@@ -403,7 +482,35 @@ async function login(event) {
     saveSession()
     renderAuthState()
     await refreshAll()
-    setFeedback(`Sessao iniciada como ${state.user.role}.`)
+    setFeedback(`Conta criada e sessao iniciada como ${state.user.role}.`)
+  } catch (error) {
+    setFeedback(error.message, 'error')
+  }
+}
+
+async function handleCreateJob(event) {
+  event.preventDefault()
+
+  try {
+    await apiRequest('/jobs', {
+      method: 'POST',
+      body: {
+        title: elements.jobTitle.value,
+        description: elements.jobDescription.value,
+        category: elements.jobCategory.value,
+        city: elements.jobCity.value,
+        neighborhood: elements.jobNeighborhood.value,
+        paymentAmount: Number(elements.jobPayment.value),
+        startAt: toIsoLocal(elements.jobStartAt.value),
+        endAt: toIsoLocal(elements.jobEndAt.value),
+        slots: Number(elements.jobSlots.value),
+      },
+    })
+
+    elements.jobForm.reset()
+    elements.jobSlots.value = 1
+    setFeedback('Vaga publicada com sucesso.')
+    await refreshAll()
   } catch (error) {
     setFeedback(error.message, 'error')
   }
@@ -432,27 +539,44 @@ async function checkHealth() {
   }
 }
 
-elements.loginForm.addEventListener('submit', login)
+function hydrateSeed(buttonKey) {
+  const seed = seedAccounts[buttonKey]
+  elements.email.value = seed.email
+  elements.password.value = seed.password
+  elements.registerRole.value = seed.role
+  elements.registerName.value = seed.name
+  elements.registerCity.value = seed.city
+  elements.registerBusinessName.value = seed.businessName || ''
+  elements.registerCategory.value = seed.category || ''
+  elements.registerFunctions.value = seed.functions || ''
+  updateRegisterRoleFields()
+}
+
+elements.loginForm.addEventListener('submit', handleAuthSubmit)
 elements.logoutButton.addEventListener('click', logout)
 elements.refreshJobs.addEventListener('click', async () => {
   try {
     await refreshAll()
-    if (state.selectedJob) {
-      await selectJob(state.selectedJob.id)
-    }
+    if (state.selectedJob) await selectJob(state.selectedJob.id)
   } catch (error) {
     setFeedback(error.message, 'error')
   }
 })
+elements.authModeLogin.addEventListener('click', () => setAuthMode('login'))
+elements.authModeRegister.addEventListener('click', () => setAuthMode('register'))
+elements.registerRole.addEventListener('change', updateRegisterRoleFields)
+elements.applyFilters.addEventListener('click', () => {
+  state.filters.city = elements.filterCity.value.trim()
+  state.filters.category = elements.filterCategory.value.trim()
+  renderJobs()
+})
+elements.jobForm.addEventListener('submit', handleCreateJob)
 
 document.querySelectorAll('.seed-button').forEach((button) => {
-  button.addEventListener('click', () => {
-    const seed = seedAccounts[button.dataset.seed]
-    elements.email.value = seed.email
-    elements.password.value = seed.password
-  })
+  button.addEventListener('click', () => hydrateSeed(button.dataset.seed))
 })
 
+setAuthMode('login')
 renderAuthState()
 renderJobs()
 renderJobDetails()

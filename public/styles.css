@@ -152,13 +152,18 @@ h1 {
   margin-bottom: 20px;
 }
 
+.section-heading.compact {
+  margin-bottom: 12px;
+}
+
 .stack {
   display: grid;
   gap: 14px;
 }
 
 .field input,
-.field textarea {
+.field textarea,
+.field select {
   width: 100%;
   padding: 14px 16px;
   border: 1px solid var(--line);
@@ -170,7 +175,8 @@ h1 {
 
 .primary-button,
 .ghost-button,
-.seed-button {
+.seed-button,
+.mode-button {
   border: 0;
   border-radius: 16px;
   font: inherit;
@@ -186,7 +192,8 @@ h1 {
 }
 
 .ghost-button,
-.seed-button {
+.seed-button,
+.mode-button {
   padding: 10px 14px;
   color: var(--text);
   background: rgba(255, 255, 255, 0.78);
@@ -195,7 +202,8 @@ h1 {
 
 .primary-button:hover,
 .ghost-button:hover,
-.seed-button:hover {
+.seed-button:hover,
+.mode-button:hover {
   transform: translateY(-1px);
 }
 
@@ -203,6 +211,26 @@ h1 {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
+}
+
+.mode-switch {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.mode-button.active {
+  color: white;
+  background: linear-gradient(135deg, var(--accent-dark) 0%, var(--accent) 100%);
+}
+
+.filters {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 10px;
+  align-items: end;
+  margin-bottom: 16px;
 }
 
 .auth-state,
@@ -354,6 +382,10 @@ h1 {
   }
 
   .detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .filters {
     grid-template-columns: 1fr;
   }
 
