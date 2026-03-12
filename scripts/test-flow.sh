@@ -3,8 +3,8 @@
 set -euo pipefail
 
 BASE_URL="${BASE_URL:-http://localhost:3000}"
-OPEN_JOB_ID="${OPEN_JOB_ID:-cmmmjrr0f000gqx321vw2e0sx}"
-PENDING_APPLICATION_ID="${PENDING_APPLICATION_ID:-cmmmjrr0n000oqx32xw3qve74}"
+OPEN_JOB_ID="${OPEN_JOB_ID:-}"
+PENDING_APPLICATION_ID="${PENDING_APPLICATION_ID:-}"
 
 require_cmd() {
   if ! command -v "$1" >/dev/null 2>&1; then
@@ -29,6 +29,30 @@ extract_json_field() {
       console.log(String(value))
     }
   ' "$json" "$field"
+}
+
+extract_job_id() {
+  local json="$1"
+
+  node -e '
+    const data = JSON.parse(process.argv[1])
+    const jobs = Array.isArray(data.jobs) ? data.jobs : []
+    const openJob = jobs.find((job) => job.status === "OPEN")
+    if (!openJob?.id) process.exit(1)
+    console.log(openJob.id)
+  ' "$json"
+}
+
+extract_pending_application_id() {
+  local json="$1"
+
+  node -e '
+    const data = JSON.parse(process.argv[1])
+    const applications = Array.isArray(data.applications) ? data.applications : []
+    const pending = applications.find((application) => application.status === "PENDING")
+    if (!pending?.id) process.exit(1)
+    console.log(pending.id)
+  ' "$json"
 }
 
 print_section() {
@@ -84,8 +108,13 @@ echo "$WORKER_LOGIN"
 WORKER_TOKEN="$(extract_json_field "$WORKER_LOGIN" token)"
 
 print_section "Listar vagas abertas"
-request GET /jobs
+JOBS_RESPONSE="$(request GET /jobs)"
+echo "$JOBS_RESPONSE"
 echo
+
+if [[ -z "$OPEN_JOB_ID" ]]; then
+  OPEN_JOB_ID="$(extract_job_id "$JOBS_RESPONSE")"
+fi
 
 print_section "Detalhe da vaga seed"
 request GET "/jobs/$OPEN_JOB_ID"
@@ -100,8 +129,13 @@ request GET /jobs/mine "$BUSINESS_TOKEN"
 echo
 
 print_section "Candidaturas do WORKER"
-request GET /applications/mine "$WORKER_TOKEN"
+WORKER_APPLICATIONS="$(request GET /applications/mine "$WORKER_TOKEN")"
+echo "$WORKER_APPLICATIONS"
 echo
+
+if [[ -z "$PENDING_APPLICATION_ID" ]]; then
+  PENDING_APPLICATION_ID="$(extract_pending_application_id "$WORKER_APPLICATIONS")"
+fi
 
 print_section "Candidaturas da vaga"
 request GET "/jobs/$OPEN_JOB_ID/applications" "$BUSINESS_TOKEN"
@@ -118,3 +152,6 @@ echo
 print_section "Fluxo concluido"
 echo "Se os IDs do seed mudarem, rode com:"
 echo "OPEN_JOB_ID=<job_id> PENDING_APPLICATION_ID=<application_id> ./scripts/test-flow.sh"
+echo "IDs usados nesta execucao:"
+echo "OPEN_JOB_ID=$OPEN_JOB_ID"
+echo "PENDING_APPLICATION_ID=$PENDING_APPLICATION_ID"

@@ -1,6 +1,9 @@
 import Fastify from 'fastify'
 import cors from '@fastify/cors'
 import sensible from '@fastify/sensible'
+import staticPlugin from '@fastify/static'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import prismaPlugin from './plugins/prisma.js'
 import authPlugin from './plugins/auth.js'
 import { registerAuthRoutes } from './modules/auth/routes.js'
@@ -11,12 +14,19 @@ import { registerReviewRoutes } from './modules/reviews/routes.js'
 
 export function buildApp() {
   const app = Fastify({ logger: true })
+  const currentDir = dirname(fileURLToPath(import.meta.url))
+  const publicDir = join(currentDir, '..', 'public')
 
   app.register(cors, {
     origin: true,
     credentials: true,
   })
   app.register(sensible)
+  app.register(staticPlugin, {
+    root: publicDir,
+    prefix: '/',
+    index: ['index.html'],
+  })
 
   app.register(prismaPlugin)
   app.register(authPlugin)

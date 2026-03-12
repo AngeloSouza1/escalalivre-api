@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EscalaLivre</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Instrument+Serif:ital@0;1&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">EscalaLivre MVP</p>
+          <h1>Contratacao rapida para operacao real.</h1>
+          <p class="hero-text">
+            Um painel unico para bares, restaurantes e freelancers operacionais publicarem, encontrarem
+            e fecharem vagas por turno.
+          </p>
+          <div class="hero-badges">
+            <span>Comercio</span>
+            <span>Worker</span>
+            <span>Turnos</span>
+            <span>Diarias</span>
+          </div>
+        </div>
+        <div class="hero-panel">
+          <div class="metric-card">
+            <span class="metric-label">Status</span>
+            <strong id="api-status">Conectando...</strong>
+            <small id="api-status-detail">Aguardando healthcheck</small>
+          </div>
+          <div class="metric-card">
+            <span class="metric-label">Base URL</span>
+            <strong id="api-base-url">Mesma origem</strong>
+            <small>Este frontend consome a API publicada neste servico.</small>
+          </div>
+        </div>
+      </header>
+
+      <main class="app-grid">
+        <section class="card auth-card">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Acesso</p>
+              <h2>Entrar na plataforma</h2>
+            </div>
+            <button id="logout-button" class="ghost-button hidden" type="button">Sair</button>
+          </div>
+
+          <form id="login-form" class="stack">
+            <label class="field">
+              <span>E-mail</span>
+              <input id="email" name="email" type="email" required />
+            </label>
+
+            <label class="field">
+              <span>Senha</span>
+              <input id="password" name="password" type="password" required />
+            </label>
+
+            <div class="seed-buttons">
+              <button class="seed-button" type="button" data-seed="business">Usar seed BUSINESS</button>
+              <button class="seed-button" type="button" data-seed="worker">Usar seed WORKER</button>
+            </div>
+
+            <button class="primary-button" type="submit">Entrar</button>
+          </form>
+
+          <div id="auth-state" class="auth-state hidden"></div>
+          <div id="auth-message" class="feedback hidden"></div>
+        </section>
+
+        <section class="card jobs-card">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Marketplace</p>
+              <h2>Vagas abertas</h2>
+            </div>
+            <button id="refresh-jobs" class="ghost-button" type="button">Atualizar</button>
+          </div>
+
+          <div id="jobs-list" class="jobs-list">
+            <p class="empty-state">Entre para carregar vagas e acoes por perfil.</p>
+          </div>
+        </section>
+
+        <section class="card details-card">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Detalhe</p>
+              <h2 id="details-title">Selecione uma vaga</h2>
+            </div>
+          </div>
+
+          <div id="job-details" class="job-details">
+            <p class="empty-state">Os detalhes da vaga aparecem aqui.</p>
+          </div>
+        </section>
+
+        <section class="card dashboard-card">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Meu painel</p>
+              <h2 id="dashboard-title">Aguardando login</h2>
+            </div>
+          </div>
+
+          <div id="dashboard-content" class="dashboard-content">
+            <p class="empty-state">Ao entrar, o painel muda para BUSINESS ou WORKER.</p>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <template id="job-item-template">
+      <article class="job-item">
+        <div class="job-item-top">
+          <div>
+            <h3 class="job-title"></h3>
+            <p class="job-meta"></p>
+          </div>
+          <span class="status-pill"></span>
+        </div>
+        <p class="job-description"></p>
+        <div class="job-footer">
+          <strong class="job-payment"></strong>
+          <button class="ghost-button job-view-button" type="button">Ver detalhes</button>
+        </div>
+      </article>
+    </template>
+
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

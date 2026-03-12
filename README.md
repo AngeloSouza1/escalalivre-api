@@ -255,6 +255,58 @@ Uso:
 
 Os requests de login salvam automaticamente `businessToken` e `workerToken` nas variaveis da collection.
 
+## Deploy no Fly.io
+
+O projeto inclui uma configuracao inicial em [fly.toml](/home/angelo/Downloads/projeto-jean/escalalivre-api/fly.toml).
+
+Antes do primeiro deploy:
+
+1. Ajuste o valor de `app` no `fly.toml` se o nome global estiver em uso.
+2. Instale e autentique o CLI do Fly:
+
+```bash
+fly auth login
+```
+
+3. Crie o app sem deploy inicial:
+
+```bash
+fly launch --no-deploy
+```
+
+4. Crie um Postgres no Fly ou use um banco externo.
+5. Configure os secrets:
+
+```bash
+fly secrets set JWT_SECRET="troque-por-uma-chave-forte" JWT_EXPIRES_IN="7d"
+```
+
+6. Associe o banco ao app:
+
+Postgres tradicional no Fly:
+
+```bash
+fly postgres attach <nome-do-postgres> --app <nome-do-app>
+```
+
+Managed Postgres:
+
+```bash
+fly mpg attach <cluster-id> --app <nome-do-app>
+```
+
+7. Faça o deploy:
+
+```bash
+fly deploy
+```
+
+8. Teste:
+
+```bash
+curl https://<nome-do-app>.fly.dev/health
+```
+
 ## Modelo de dados
 
 Entidades principais:
