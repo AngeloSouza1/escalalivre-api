@@ -42,6 +42,18 @@
             </div>
           </div>
 
+          <div class="persona-pills">
+            <button id="persona-worker" class="persona-pill active" type="button">Quero trabalhar</button>
+            <button id="persona-business" class="persona-pill" type="button">Quero contratar</button>
+          </div>
+
+          <div class="flow-hint">
+            <strong id="auth-hint-title">Entre para continuar</strong>
+            <p id="auth-hint-copy">
+              Use login para acessar um perfil existente ou cadastro para criar rapidamente uma conta de profissional ou comercio.
+            </p>
+          </div>
+
           <div class="mode-switch">
             <button id="auth-mode-login" class="mode-button active" type="button">Login</button>
             <button id="auth-mode-register" class="mode-button" type="button">Cadastro</button>
@@ -105,9 +117,10 @@
 
       <section id="app-shell" class="app-shell hidden">
         <header class="topbar">
-          <div>
+          <div class="topbar-copy">
             <p class="eyebrow">EscalaLivre</p>
             <h2 id="app-greeting">Painel</h2>
+            <p id="topbar-subtitle" class="topbar-subtitle"></p>
           </div>
           <div class="topbar-actions">
             <div id="session-badge" class="session-badge"></div>
@@ -121,6 +134,17 @@
           </aside>
 
           <main class="view-shell">
+            <section id="view-overview" class="view-panel hidden">
+              <div class="section-header">
+                <div>
+                  <p class="eyebrow">Inicio</p>
+                  <h3>Visao geral</h3>
+                </div>
+              </div>
+              <div id="primary-cta" class="primary-cta"></div>
+              <div id="overview-panel" class="overview-grid"></div>
+            </section>
+
             <section id="view-discover" class="view-panel hidden">
               <div class="section-header">
                 <div>
@@ -128,6 +152,11 @@
                   <h3>Descobrir vagas</h3>
                 </div>
                 <button id="refresh-jobs" class="ghost-button" type="button">Atualizar</button>
+              </div>
+
+              <div class="flow-hint compact">
+                <strong id="discover-hint-title">Encontre a proxima oportunidade</strong>
+                <p id="discover-hint-copy">Filtre por cidade e categoria, abra uma vaga e avance para candidatura ou aprovacao.</p>
               </div>
 
               <div class="filters">
@@ -157,6 +186,10 @@
                   <h3>Minhas candidaturas</h3>
                 </div>
               </div>
+              <div class="flow-hint compact">
+                <strong>Acompanhe seu pipeline</strong>
+                <p>Veja quais vagas ainda estao pendentes, quais foram aprovadas e quais precisam de nova tentativa.</p>
+              </div>
               <div id="applications-list" class="stack"></div>
             </section>
 
@@ -167,6 +200,10 @@
                   <h3>Minhas vagas</h3>
                 </div>
               </div>
+              <div class="flow-hint compact">
+                <strong>Monitore publicacoes e candidatos</strong>
+                <p>Use esta tela para revisar vagas ja abertas e acompanhar o andamento da operacao.</p>
+              </div>
               <div id="business-jobs-list" class="stack"></div>
             </section>
 
@@ -175,6 +212,26 @@
                 <div>
                   <p class="eyebrow">Comercio</p>
                   <h3>Publicar vaga</h3>
+                </div>
+              </div>
+
+              <div class="flow-hint compact">
+                <strong>Descreva a necessidade com clareza</strong>
+                <p>Quanto melhor o titulo, o horario e o valor, maior a chance de atrair profissionais certos rapidamente.</p>
+              </div>
+
+              <div class="stepper" id="job-stepper">
+                <div class="step active">
+                  <span>1</span>
+                  <strong>Contexto</strong>
+                </div>
+                <div class="step">
+                  <span>2</span>
+                  <strong>Operacao</strong>
+                </div>
+                <div class="step">
+                  <span>3</span>
+                  <strong>Publicacao</strong>
                 </div>
               </div>
 
@@ -227,6 +284,10 @@
                   <p class="eyebrow">Conta</p>
                   <h3>Perfil</h3>
                 </div>
+              </div>
+              <div class="flow-hint compact">
+                <strong>Mantenha o perfil confiavel</strong>
+                <p>Cidade, funcao e dados de contato bem preenchidos ajudam o match e a operacao.</p>
               </div>
               <div id="profile-panel" class="profile-panel"></div>
             </section>

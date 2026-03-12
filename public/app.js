@@ -20,11 +20,13 @@ const seedAccounts = {
 
 const navConfig = {
   WORKER: [
+    { id: 'overview', label: 'Visao geral' },
     { id: 'discover', label: 'Descobrir vagas' },
     { id: 'applications', label: 'Minhas candidaturas' },
     { id: 'profile', label: 'Perfil' },
   ],
   BUSINESS: [
+    { id: 'overview', label: 'Visao geral' },
     { id: 'discover', label: 'Marketplace' },
     { id: 'business-jobs', label: 'Minhas vagas' },
     { id: 'create-job', label: 'Publicar vaga' },
@@ -39,7 +41,8 @@ const state = {
   selectedJob: null,
   applications: [],
   authMode: 'login',
-  currentView: 'discover',
+  selectedPersona: 'WORKER',
+  currentView: 'overview',
   filters: {
     city: '',
     category: '',
@@ -52,6 +55,10 @@ const elements = {
   apiStatus: document.querySelector('#api-status'),
   apiStatusDetail: document.querySelector('#api-status-detail'),
   authTitle: document.querySelector('#auth-title'),
+  authHintTitle: document.querySelector('#auth-hint-title'),
+  authHintCopy: document.querySelector('#auth-hint-copy'),
+  personaWorker: document.querySelector('#persona-worker'),
+  personaBusiness: document.querySelector('#persona-business'),
   authForm: document.querySelector('#auth-form'),
   authModeLogin: document.querySelector('#auth-mode-login'),
   authModeRegister: document.querySelector('#auth-mode-register'),
@@ -72,6 +79,7 @@ const elements = {
   fieldWorkerFunctions: document.querySelector('#field-worker-functions'),
   authFeedback: document.querySelector('#auth-feedback'),
   appGreeting: document.querySelector('#app-greeting'),
+  topbarSubtitle: document.querySelector('#topbar-subtitle'),
   sessionBadge: document.querySelector('#session-badge'),
   logoutButton: document.querySelector('#logout-button'),
   navList: document.querySelector('#nav-list'),
@@ -79,6 +87,10 @@ const elements = {
   filterCity: document.querySelector('#filter-city'),
   filterCategory: document.querySelector('#filter-category'),
   applyFilters: document.querySelector('#apply-filters'),
+  discoverHintTitle: document.querySelector('#discover-hint-title'),
+  discoverHintCopy: document.querySelector('#discover-hint-copy'),
+  primaryCta: document.querySelector('#primary-cta'),
+  overviewPanel: document.querySelector('#overview-panel'),
   jobsList: document.querySelector('#jobs-list'),
   jobDetails: document.querySelector('#job-details'),
   applicationsList: document.querySelector('#applications-list'),
@@ -95,8 +107,10 @@ const elements = {
   jobStartAt: document.querySelector('#job-start-at'),
   jobEndAt: document.querySelector('#job-end-at'),
   jobSlots: document.querySelector('#job-slots'),
+  jobStepper: document.querySelector('#job-stepper'),
   jobTemplate: document.querySelector('#job-item-template'),
   views: {
+    overview: document.querySelector('#view-overview'),
     discover: document.querySelector('#view-discover'),
     applications: document.querySelector('#view-applications'),
     'business-jobs': document.querySelector('#view-business-jobs'),
@@ -169,16 +183,72 @@ function clearFeedback(target) {
   target.textContent = ''
 }
 
+function renderStatusTrack(status) {
+  const order = ['PENDING', 'APPROVED']
+  const labels = {
+    PENDING: 'Enviada',
+    APPROVED: 'Aprovada',
+    REJECTED: 'Recusada',
+  }
+
+  if (status === 'REJECTED') {
+    return `
+      <div class="status-track">
+        <span class="status-node done">Enviada</span>
+        <span class="status-node current">Recusada</span>
+      </div>
+    `
+  }
+
+  const currentIndex = order.indexOf(status)
+
+  return `
+    <div class="status-track">
+      ${order.map((item, index) => {
+        const className = index < currentIndex ? 'done' : index === currentIndex ? 'current' : ''
+        return `<span class="status-node ${className}">${labels[item]}</span>`
+      }).join('')}
+    </div>
+  `
+}
+
+function setPersona(role) {
+  state.selectedPersona = role
+  elements.personaWorker.classList.toggle('active', role === 'WORKER')
+  elements.personaBusiness.classList.toggle('active', role === 'BUSINESS')
+  elements.registerRole.value = role
+  updateRegisterRoleFields()
+  if (state.authMode === 'register') {
+    setAuthMode('register')
+  }
+}
+
 function setAuthMode(mode) {
   state.authMode = mode
   const isRegister = mode === 'register'
+  const isBusinessPersona = state.selectedPersona === 'BUSINESS'
   elements.authTitle.textContent = isRegister ? 'Criar conta' : 'Entrar'
-  elements.authSubmit.textContent = isRegister ? 'Criar conta' : 'Entrar'
+  elements.authSubmit.textContent = isRegister
+    ? (isBusinessPersona ? 'Criar conta de comercio' : 'Criar conta de profissional')
+    : 'Entrar'
+  elements.authHintTitle.textContent = isRegister
+    ? (isBusinessPersona ? 'Prepare seu comercio para publicar rapido' : 'Monte seu perfil para receber convites')
+    : 'Entre para continuar'
+  elements.authHintCopy.textContent = isRegister
+    ? (isBusinessPersona
+        ? 'Crie um acesso de comercio, informe o nome do estabelecimento e publique a primeira vaga sem depender de grupos informais.'
+        : 'Crie seu perfil de profissional, informe cidade e funcoes principais para aparecer nas oportunidades certas.')
+    : (isBusinessPersona
+        ? 'Acesse sua operacao para publicar vagas, revisar candidatos e responder rapido quando surgir uma falta.'
+        : 'Acesse sua conta para explorar vagas, acompanhar candidaturas e manter sua rotina de renda extra organizada.')
   elements.authModeLogin.classList.toggle('active', !isRegister)
   elements.authModeRegister.classList.toggle('active', isRegister)
   elements.fieldRole.classList.toggle('hidden', !isRegister)
   elements.fieldName.classList.toggle('hidden', !isRegister)
   elements.fieldCity.classList.toggle('hidden', !isRegister)
+  if (isRegister) {
+    elements.registerRole.value = state.selectedPersona
+  }
   updateRegisterRoleFields()
 }
 
@@ -212,6 +282,9 @@ function renderTopbar() {
     ? 'Painel do comercio'
     : 'Painel do profissional'
   elements.sessionBadge.textContent = `${name} · ${state.user.role}`
+  elements.topbarSubtitle.textContent = state.user.role === 'BUSINESS'
+    ? 'Publique vagas, acompanhe candidaturas e responda rapido quando a operacao apertar.'
+    : 'Descubra vagas compativeis, acompanhe aprovacoes e mantenha sua disponibilidade organizada.'
 }
 
 function renderNavigation() {
@@ -247,12 +320,120 @@ function filteredJobs() {
   })
 }
 
+function renderOverview() {
+  if (!state.user) {
+    elements.primaryCta.innerHTML = ''
+    elements.overviewPanel.innerHTML = ''
+    return
+  }
+
+  const totalOpenJobs = state.jobs.filter((job) => job.status === 'OPEN').length
+  const approvedApplications = state.applications.filter((application) => application.status === 'APPROVED').length
+
+  if (state.user.role === 'WORKER') {
+    const pendingApplications = state.applications.filter((application) => application.status === 'PENDING').length
+    elements.primaryCta.innerHTML = `
+      <strong>Proximo passo recomendado</strong>
+      <p>Abra o marketplace para comparar cidade, horario e valor antes de enviar a proxima candidatura.</p>
+      <button id="overview-cta-button" class="primary-button" type="button">Explorar vagas abertas</button>
+    `
+    elements.overviewPanel.innerHTML = `
+      <article class="overview-card">
+        <span class="meta-label">Agora</span>
+        <strong>Voce tem ${state.applications.length} candidatura(s) no radar.</strong>
+        <ul>
+          <li>${approvedApplications} ja aprovada(s)</li>
+          <li>${pendingApplications} aguardando resposta</li>
+          <li>${totalOpenJobs} vaga(s) aberta(s) no marketplace</li>
+          <li>Use "Descobrir vagas" para aplicar em novos turnos</li>
+        </ul>
+      </article>
+      <article class="overview-card">
+        <span class="meta-label">Proximo passo</span>
+        <strong>Abra uma vaga e avalie rapidamente se o turno faz sentido.</strong>
+        <ul>
+          <li>confira cidade, horario e valor</li>
+          <li>envie candidatura em um clique</li>
+          <li>acompanhe resposta em "Minhas candidaturas"</li>
+        </ul>
+      </article>
+    `
+    document.querySelector('#overview-cta-button')?.addEventListener('click', () => {
+      state.currentView = 'discover'
+      renderNavigation()
+      renderViews()
+    })
+    return
+  }
+
+  const ownedJobs = state.jobs.filter((job) => job.businessId === state.user.id)
+  const openOwnedJobs = ownedJobs.filter((job) => job.status === 'OPEN').length
+  const totalCandidates = ownedJobs.reduce((count, job) => count + (job._count?.applications || 0), 0)
+  const upcomingJob = ownedJobs.find((job) => job.status === 'OPEN') || ownedJobs[0]
+  const ctaLabel = ownedJobs.length ? 'Acompanhar minhas vagas' : 'Publicar primeira vaga'
+  const nextView = ownedJobs.length ? 'business-jobs' : 'create-job'
+
+  elements.primaryCta.innerHTML = `
+    <strong>Proximo passo recomendado</strong>
+    <p>${ownedJobs.length
+      ? 'Entre nas suas vagas publicadas para revisar candidatos e decidir rapidamente quem assume o turno.'
+      : 'Descreva a demanda, defina valor e horario e coloque sua primeira vaga no ar em poucos minutos.'}</p>
+    <button id="overview-cta-button" class="primary-button" type="button">${ctaLabel}</button>
+  `
+
+  elements.overviewPanel.innerHTML = `
+    <article class="overview-card">
+      <span class="meta-label">Operacao</span>
+      <strong>Voce tem ${ownedJobs.length} vaga(s) publicada(s).</strong>
+      <ul>
+        <li>${openOwnedJobs} ainda aberta(s)</li>
+        <li>${totalCandidates} candidatura(s) acumulada(s)</li>
+        <li>use "Publicar vaga" para novas demandas urgentes</li>
+      </ul>
+    </article>
+    <article class="overview-card">
+      <span class="meta-label">Foco imediato</span>
+      <strong>${upcomingJob ? upcomingJob.title : 'Publique sua primeira vaga'}</strong>
+      <ul>
+        <li>${upcomingJob ? `${upcomingJob.city} · ${currency(upcomingJob.paymentAmount)}` : 'Defina cidade, valor e horario do turno'}</li>
+        <li>veja como a vaga aparece para profissionais</li>
+        <li>acompanhe suas vagas em "Minhas vagas"</li>
+      </ul>
+    </article>
+  `
+
+  document.querySelector('#overview-cta-button')?.addEventListener('click', () => {
+    state.currentView = nextView
+    renderNavigation()
+    renderViews()
+  })
+}
+
+function updateJobStepper() {
+  const values = [
+    Boolean(elements.jobTitle.value.trim() && elements.jobDescription.value.trim()),
+    Boolean(elements.jobCategory.value.trim() && elements.jobCity.value.trim() && elements.jobPayment.value),
+    Boolean(elements.jobStartAt.value && elements.jobEndAt.value && elements.jobSlots.value),
+  ]
+
+  const steps = elements.jobStepper?.querySelectorAll('.step') || []
+  steps.forEach((step, index) => {
+    step.classList.toggle('active', index === values.findIndex((value) => !value))
+  })
+
+  if (values.every(Boolean) && steps.length) {
+    steps.forEach((step) => step.classList.remove('active'))
+    steps[2].classList.add('active')
+  }
+}
+
 function renderJobsList() {
   const jobs = filteredJobs()
   elements.jobsList.innerHTML = ''
 
   if (!jobs.length) {
     elements.jobsList.innerHTML = '<p class="empty-state">Nenhuma vaga encontrada com os filtros atuais.</p>'
+    elements.jobDetails.innerHTML = '<p class="empty-state">Ajuste os filtros ou limpe a busca para voltar a explorar vagas.</p>'
     return
   }
 
@@ -296,6 +477,7 @@ function renderJobDetails() {
           <div>
             <strong>${application.worker?.name || 'Profissional'}</strong>
             <p class="mini-copy">${application.message || 'Sem mensagem'}</p>
+            ${renderStatusTrack(application.status)}
           </div>
           <div>
             <span class="status-pill status-${application.status.toLowerCase()}">${application.status}</span>
@@ -365,9 +547,10 @@ function renderApplicationsView() {
             <span class="status-pill status-${application.status.toLowerCase()}">${application.status}</span>
           </div>
           <p class="card-copy">${currency(application.job.paymentAmount)}</p>
+          ${renderStatusTrack(application.status)}
         </article>
       `).join('')
-    : '<p class="empty-state">Nenhuma candidatura encontrada.</p>'
+    : '<p class="empty-state">Voce ainda nao se candidatou. Abra "Descobrir vagas" para iniciar.</p>'
 }
 
 function renderBusinessJobsView() {
@@ -385,7 +568,7 @@ function renderBusinessJobsView() {
           <p class="card-copy">${currency(job.paymentAmount)} · ${job._count?.applications || 0} candidatura(s)</p>
         </article>
       `).join('')
-    : '<p class="empty-state">Nenhuma vaga publicada ainda.</p>'
+    : '<p class="empty-state">Nenhuma vaga publicada ainda. Va para "Publicar vaga" para criar a primeira.</p>'
 }
 
 function renderProfile() {
@@ -429,7 +612,20 @@ async function refreshData() {
   state.applications = state.user?.role === 'WORKER'
     ? (await apiRequest('/applications/mine')).applications
     : []
+  if (!state.selectedJob) {
+    const firstJob = filteredJobs()[0]
+    state.selectedJob = firstJob || null
+  } else {
+    const refreshedSelectedJob = state.jobs.find((job) => job.id === state.selectedJob.id)
+    state.selectedJob = refreshedSelectedJob || state.selectedJob
+  }
+  renderOverview()
   renderJobsList()
+  if (state.selectedJob) {
+    await selectJob(state.selectedJob.id)
+  } else {
+    renderJobDetails()
+  }
   renderApplicationsView()
   renderBusinessJobsView()
   renderProfile()
@@ -512,6 +708,7 @@ async function submitAuth(event) {
       state.user = data.user
     }
 
+    state.currentView = 'overview'
     persistSession()
     showAppShell()
     renderTopbar()
@@ -561,7 +758,7 @@ function logout() {
   state.jobs = []
   state.selectedJob = null
   state.applications = []
-  state.currentView = 'discover'
+  state.currentView = 'overview'
   persistSession()
   showAppShell()
   clearFeedback(elements.authFeedback)
@@ -570,6 +767,7 @@ function logout() {
 
 function fillSeed(type) {
   const seed = seedAccounts[type]
+  setPersona(seed.role)
   elements.authEmail.value = seed.email
   elements.authPassword.value = seed.password
   elements.registerRole.value = seed.role
@@ -607,6 +805,8 @@ async function restoreSession() {
 }
 
 elements.authForm.addEventListener('submit', submitAuth)
+elements.personaWorker.addEventListener('click', () => setPersona('WORKER'))
+elements.personaBusiness.addEventListener('click', () => setPersona('BUSINESS'))
 elements.authModeLogin.addEventListener('click', () => setAuthMode('login'))
 elements.authModeRegister.addEventListener('click', () => setAuthMode('register'))
 elements.registerRole.addEventListener('change', updateRegisterRoleFields)
@@ -618,14 +818,28 @@ elements.refreshJobs.addEventListener('click', async () => {
 elements.applyFilters.addEventListener('click', () => {
   state.filters.city = elements.filterCity.value.trim()
   state.filters.category = elements.filterCategory.value.trim()
+  state.selectedJob = filteredJobs()[0] || null
   renderJobsList()
+  renderJobDetails()
 })
 elements.jobForm.addEventListener('submit', createJob)
+;[
+  elements.jobTitle,
+  elements.jobDescription,
+  elements.jobCategory,
+  elements.jobCity,
+  elements.jobPayment,
+  elements.jobStartAt,
+  elements.jobEndAt,
+  elements.jobSlots,
+].forEach((field) => field?.addEventListener('input', updateJobStepper))
 document.querySelectorAll('.seed-button').forEach((button) => {
   button.addEventListener('click', () => fillSeed(button.dataset.seed))
 })
 
+setPersona('WORKER')
 setAuthMode('login')
 showAppShell()
+updateJobStepper()
 await checkHealth()
 await restoreSession()
